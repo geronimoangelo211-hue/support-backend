@@ -25,13 +25,12 @@ public class StudentController {
         return students;
     }
 
-    // POST /api/students -> Adds a new student
-    @PostMapping
-    public ResponseEntity<Map<String, Object>> addStudent(@RequestBody Student student) {
-        students.add(student);
+    @PostMapping("/sync")
+    public ResponseEntity<Map<String, Object>> syncStudents(@RequestBody List<Student> newStudents) {
+        students.clear();
+        students.addAll(newStudents);
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("message", "Student added successfully");
         return ResponseEntity.ok(response);
     }
 }
