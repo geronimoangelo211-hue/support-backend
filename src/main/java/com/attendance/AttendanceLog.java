@@ -1,26 +1,32 @@
 package com.attendance;
 
+import java.util.Map;
+
 public class AttendanceLog {
-    private String studentId;
-    private String studentName;
-    private String action; // "TIME IN" or "TIME OUT"
-    private String timestamp;
+    private String id;
+    private String name;
+    private String action; 
+    private String time;
+    private String date;
+    private Map<String, String> details; // <-- THIS SAVES THE GC, ANNOUNCEMENT, ETC.
 
     public AttendanceLog() {}
 
-    public AttendanceLog(String studentId, String studentName, String action, String timestamp) {
-        this.studentId = studentId;
-        this.studentName = studentName;
-        this.action = action;
-        this.timestamp = timestamp;
-    }
-
-    public String getStudentId() { return studentId; }
-    public void setStudentId(String studentId) { this.studentId = studentId; }
-    public String getStudentName() { return studentName; }
-    public void setStudentName(String studentName) { this.studentName = studentName; }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+    
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    
     public String getAction() { return action; }
     public void setAction(String action) { this.action = action; }
-    public String getTimestamp() { return timestamp; }
-    public void setTimestamp(String timestamp) { this.timestamp = timestamp; }
+    
+    public String getTime() { return time; }
+    public void setTime(String time) { this.time = time; }
+    
+    public String getDate() { return date; }
+    public void setDate(String date) { this.date = date; }
+    
+    public Map<String, String> getDetails() { return details; }
+    public void setDetails(Map<String, String> details) { this.details = details; }
 }
