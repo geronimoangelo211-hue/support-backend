@@ -26,13 +26,12 @@ public class AttendanceController {
         return logs;
     }
 
-    // Add a new log
-    @PostMapping
-    public ResponseEntity<Map<String, Object>> addLog(@RequestBody AttendanceLog log) {
-        logs.add(log);
+    @PostMapping("/sync")
+    public ResponseEntity<Map<String, Object>> syncLogs(@RequestBody List<AttendanceLog> newLogs) {
+        logs.clear();
+        logs.addAll(newLogs);
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("message", "Log saved to cloud");
         return ResponseEntity.ok(response);
     }
 
