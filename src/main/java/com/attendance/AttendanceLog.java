@@ -8,7 +8,8 @@ public class AttendanceLog {
     private String action; 
     private String time;
     private String date;
-    private Map<String, String> details; // <-- THIS SAVES THE GC, ANNOUNCEMENT, ETC.
+    private Map<String, String> details; 
+    private Map<String, Object> originalLog; // <-- NEW: Stores the original data if exempted!
 
     public AttendanceLog() {}
 
@@ -29,4 +30,7 @@ public class AttendanceLog {
     
     public Map<String, String> getDetails() { return details; }
     public void setDetails(Map<String, String> details) { this.details = details; }
+    
+    public Map<String, Object> getOriginalLog() { return originalLog; }
+    public void setOriginalLog(Map<String, Object> originalLog) { this.originalLog = originalLog; }
 }
