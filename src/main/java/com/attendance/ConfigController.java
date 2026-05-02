@@ -10,7 +10,8 @@ import java.util.Map;
 @CrossOrigin(origins = "*") // Adjust your CORS as needed
 public class ConfigController {
 
-    private static boolean isSystemLocked = false;
+    // FIXED: Changed from private to public so AttendanceController can see it!
+    public static boolean isSystemLocked = false;
 
     @GetMapping("/status")
     public ResponseEntity<Map<String, Boolean>> getSystemStatus() {
