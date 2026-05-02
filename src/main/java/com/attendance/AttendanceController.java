@@ -22,6 +22,12 @@ public class AttendanceController {
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> addLog(@RequestBody AttendanceLog log) {
+        if (ConfigController.isSystemLocked) {
+        return ResponseEntity.status(403).body(Map.of(
+            "success", false, 
+            "message", "SYSTEM_LOCKED"
+        ));
+    }
         logs.add(log);
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
