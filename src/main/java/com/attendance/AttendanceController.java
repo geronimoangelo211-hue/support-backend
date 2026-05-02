@@ -22,12 +22,14 @@ public class AttendanceController {
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> addLog(@RequestBody AttendanceLog log) {
+        // Backend Lock Protection
         if (ConfigController.isSystemLocked) {
-        return ResponseEntity.status(403).body(Map.of(
-            "success", false, 
-            "message", "SYSTEM_LOCKED"
-        ));
-    }
+            return ResponseEntity.status(403).body(Map.of(
+                "success", false, 
+                "message", "SYSTEM_LOCKED"
+            ));
+        }
+
         logs.add(log);
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
@@ -37,6 +39,14 @@ public class AttendanceController {
     // SYNC ENDPOINT: Overwrites the cloud logs
     @PostMapping("/sync")
     public ResponseEntity<Map<String, Object>> syncLogs(@RequestBody List<AttendanceLog> newLogs) {
+        // FIXED: Added Backend Lock Protection here because your Javascript uses /sync!
+        if (ConfigController.isSystemLocked) {
+            return ResponseEntity.status(403).body(Map.of(
+                "success", false, 
+                "message", "SYSTEM_LOCKED"
+            ));
+        }
+
         logs.clear();
         if (newLogs != null) {
             logs.addAll(newLogs);
