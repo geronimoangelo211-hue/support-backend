@@ -7,12 +7,11 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/config")
-// STRICT CORS: Only your Vercel websites are allowed to talk to this API now!
-@CrossOrigin(origins = {"https://os-register.vercel.app", "https://YOUR-MAIN-DASHBOARD-URL.vercel.app"}) 
+@CrossOrigin(origins = "*") // Reverted to allow connection. Hackers are stopped by the Secret Key!
 public class ConfigController {
 
     public static boolean isSystemLocked = false;
-    private final String ADMIN_KEY = "SupportAdmin@2026"; // Secret password for API
+    private final String ADMIN_KEY = "SupportAdmin@2026";
 
     @GetMapping("/status")
     public ResponseEntity<Map<String, Boolean>> getSystemStatus() {
