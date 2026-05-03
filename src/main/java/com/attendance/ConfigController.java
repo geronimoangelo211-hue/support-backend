@@ -7,11 +7,11 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/config")
-@CrossOrigin(origins = "*") // Reverted to allow connection. Hackers are stopped by the Secret Key!
+@CrossOrigin(origins = "*") 
 public class ConfigController {
 
     public static boolean isSystemLocked = false;
-    private final String ADMIN_KEY = "SupportAdmin@2026";
+    private final String ADMIN_KEY = "SupportAdmin@2026"; // The exact key from your JS
 
     @GetMapping("/status")
     public ResponseEntity<Map<String, Boolean>> getSystemStatus() {
@@ -25,9 +25,9 @@ public class ConfigController {
             @RequestHeader(value = "X-Admin-Key", required = false) String adminKey, 
             @RequestBody Map<String, Boolean> request) {
         
-        // HACKER CHECK
-        if (!ADMIN_KEY.equals(adminKey)) {
-            return ResponseEntity.status(401).body(Map.of("success", false, "message", "UNAUTHORIZED HACKER"));
+        // IRONCLAD HACKER CHECK: Rejects if the key is missing or wrong
+        if (adminKey == null || !ADMIN_KEY.equals(adminKey)) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "UNAUTHORIZED ACCESS: Missing or Invalid Admin Key"));
         }
 
         if (request.containsKey("isLocked")) {
