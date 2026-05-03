@@ -10,7 +10,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/students")
-@CrossOrigin(origins = {"https://os-register.vercel.app", "https://YOUR-MAIN-DASHBOARD-URL.vercel.app"}) 
+@CrossOrigin(origins = "*") 
 public class StudentController {
 
     private final List<Student> students = new ArrayList<>();
