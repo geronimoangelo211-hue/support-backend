@@ -10,10 +10,11 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/logs")
-@CrossOrigin(origins = "*") // <--- Allows Vercel to sync logs!
+@CrossOrigin(origins = {"https://os-register.vercel.app", "https://YOUR-MAIN-DASHBOARD-URL.vercel.app"}) 
 public class AttendanceController {
 
     private final List<AttendanceLog> logs = new ArrayList<>();
+    private final String ADMIN_KEY = "SupportAdmin@2026";
 
     @GetMapping
     public List<AttendanceLog> getAllLogs() {
@@ -22,24 +23,28 @@ public class AttendanceController {
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> addLog(@RequestBody AttendanceLog log) {
-        // Backend Lock Protection
         if (ConfigController.isSystemLocked) {
             return ResponseEntity.status(403).body(Map.of(
                 "success", false, 
                 "message", "SYSTEM_LOCKED"
             ));
         }
-
         logs.add(log);
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         return ResponseEntity.ok(response);
     }
 
-    // SYNC ENDPOINT: Overwrites the cloud logs
     @PostMapping("/sync")
-    public ResponseEntity<Map<String, Object>> syncLogs(@RequestBody List<AttendanceLog> newLogs) {
-        // FIXED: Added Backend Lock Protection here because your Javascript uses /sync!
+    public ResponseEntity<Map<String, Object>> syncLogs(
+            @RequestHeader(value = "X-Admin-Key", required = false) String adminKey, 
+            @RequestBody List<AttendanceLog> newLogs) {
+        
+        // HACKER CHECK
+        if (!ADMIN_KEY.equals(adminKey)) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "UNAUTHORIZED HACKER"));
+        }
+
         if (ConfigController.isSystemLocked) {
             return ResponseEntity.status(403).body(Map.of(
                 "success", false, 
@@ -57,7 +62,14 @@ public class AttendanceController {
     }
 
     @DeleteMapping("/clear")
-    public ResponseEntity<Map<String, Object>> clearLogs() {
+    public ResponseEntity<Map<String, Object>> clearLogs(
+            @RequestHeader(value = "X-Admin-Key", required = false) String adminKey) {
+        
+        // HACKER CHECK
+        if (!ADMIN_KEY.equals(adminKey)) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "UNAUTHORIZED HACKER"));
+        }
+
         logs.clear();
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
