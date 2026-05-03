@@ -10,19 +10,17 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/students")
-@CrossOrigin(origins = "*") // <--- This allows Vercel to talk to this specific controller!
+@CrossOrigin(origins = {"https://os-register.vercel.app", "https://YOUR-MAIN-DASHBOARD-URL.vercel.app"}) 
 public class StudentController {
 
-    // In-memory list to hold students
     private final List<Student> students = new ArrayList<>();
+    private final String ADMIN_KEY = "SupportAdmin@2026";
 
-    // Get all students
     @GetMapping
     public List<Student> getAllStudents() {
         return students;
     }
 
-    // Add a single student
     @PostMapping
     public ResponseEntity<Map<String, Object>> addStudent(@RequestBody Student student) {
         students.add(student);
@@ -32,9 +30,16 @@ public class StudentController {
         return ResponseEntity.ok(response);
     }
 
-    // SYNC ENDPOINT: Overwrites the cloud with the latest data from any device
     @PostMapping("/sync")
-    public ResponseEntity<Map<String, Object>> syncStudents(@RequestBody List<Student> newStudents) {
+    public ResponseEntity<Map<String, Object>> syncStudents(
+            @RequestHeader(value = "X-Admin-Key", required = false) String adminKey, 
+            @RequestBody List<Student> newStudents) {
+        
+        // HACKER CHECK
+        if (!ADMIN_KEY.equals(adminKey)) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "UNAUTHORIZED HACKER"));
+        }
+
         students.clear();
         if (newStudents != null) {
             students.addAll(newStudents);
