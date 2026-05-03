@@ -16,11 +16,13 @@ public class StudentController {
     private final List<Student> students = new ArrayList<>();
     private final String ADMIN_KEY = "SupportAdmin@2026";
 
+    // Open to everyone (so Dashboards can read the list)
     @GetMapping
     public List<Student> getAllStudents() {
         return students;
     }
 
+    // Open to everyone (so students can Self-Register)
     @PostMapping
     public ResponseEntity<Map<String, Object>> addStudent(@RequestBody Student student) {
         students.add(student);
@@ -30,14 +32,15 @@ public class StudentController {
         return ResponseEntity.ok(response);
     }
 
+    // DANGEROUS OVERWRITE ZONE: Strictly locked down
     @PostMapping("/sync")
     public ResponseEntity<Map<String, Object>> syncStudents(
             @RequestHeader(value = "X-Admin-Key", required = false) String adminKey, 
             @RequestBody List<Student> newStudents) {
         
-        // HACKER CHECK
-        if (!ADMIN_KEY.equals(adminKey)) {
-            return ResponseEntity.status(401).body(Map.of("success", false, "message", "UNAUTHORIZED HACKER"));
+        // IRONCLAD HACKER CHECK
+        if (adminKey == null || !ADMIN_KEY.equals(adminKey)) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "UNAUTHORIZED ACCESS: Cannot sync students without Admin Key"));
         }
 
         students.clear();
