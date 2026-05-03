@@ -7,11 +7,12 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/config")
-@CrossOrigin(origins = "*") // Adjust your CORS as needed
+// STRICT CORS: Only your Vercel websites are allowed to talk to this API now!
+@CrossOrigin(origins = {"https://os-register.vercel.app", "https://YOUR-MAIN-DASHBOARD-URL.vercel.app"}) 
 public class ConfigController {
 
-    // FIXED: Changed from private to public so AttendanceController can see it!
     public static boolean isSystemLocked = false;
+    private final String ADMIN_KEY = "SupportAdmin@2026"; // Secret password for API
 
     @GetMapping("/status")
     public ResponseEntity<Map<String, Boolean>> getSystemStatus() {
@@ -21,7 +22,15 @@ public class ConfigController {
     }
 
     @PostMapping("/toggle")
-    public ResponseEntity<Map<String, Object>> toggleSystemLock(@RequestBody Map<String, Boolean> request) {
+    public ResponseEntity<Map<String, Object>> toggleSystemLock(
+            @RequestHeader(value = "X-Admin-Key", required = false) String adminKey, 
+            @RequestBody Map<String, Boolean> request) {
+        
+        // HACKER CHECK
+        if (!ADMIN_KEY.equals(adminKey)) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "UNAUTHORIZED HACKER"));
+        }
+
         if (request.containsKey("isLocked")) {
             isSystemLocked = request.get("isLocked");
         }
