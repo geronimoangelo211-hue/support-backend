@@ -10,7 +10,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/logs")
-@CrossOrigin(origins = {"https://os-register.vercel.app", "https://YOUR-MAIN-DASHBOARD-URL.vercel.app"}) 
+@CrossOrigin(origins = "*") 
 public class AttendanceController {
 
     private final List<AttendanceLog> logs = new ArrayList<>();
