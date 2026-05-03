@@ -16,11 +16,13 @@ public class AttendanceController {
     private final List<AttendanceLog> logs = new ArrayList<>();
     private final String ADMIN_KEY = "SupportAdmin@2026";
 
+    // Open so Dashboard can read history
     @GetMapping
     public List<AttendanceLog> getAllLogs() {
         return logs;
     }
 
+    // Open so students can append a single log safely
     @PostMapping
     public ResponseEntity<Map<String, Object>> addLog(@RequestBody AttendanceLog log) {
         if (ConfigController.isSystemLocked) {
@@ -35,21 +37,19 @@ public class AttendanceController {
         return ResponseEntity.ok(response);
     }
 
+    // DANGEROUS OVERWRITE ZONE: Strictly locked down
     @PostMapping("/sync")
     public ResponseEntity<Map<String, Object>> syncLogs(
             @RequestHeader(value = "X-Admin-Key", required = false) String adminKey, 
             @RequestBody List<AttendanceLog> newLogs) {
         
-        // HACKER CHECK
-        if (!ADMIN_KEY.equals(adminKey)) {
-            return ResponseEntity.status(401).body(Map.of("success", false, "message", "UNAUTHORIZED HACKER"));
+        // IRONCLAD HACKER CHECK
+        if (adminKey == null || !ADMIN_KEY.equals(adminKey)) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "UNAUTHORIZED ACCESS: Cannot overwrite logs without Admin Key"));
         }
 
         if (ConfigController.isSystemLocked) {
-            return ResponseEntity.status(403).body(Map.of(
-                "success", false, 
-                "message", "SYSTEM_LOCKED"
-            ));
+            return ResponseEntity.status(403).body(Map.of("success", false, "message", "SYSTEM_LOCKED"));
         }
 
         logs.clear();
@@ -61,13 +61,14 @@ public class AttendanceController {
         return ResponseEntity.ok(response);
     }
 
+    // DANGEROUS WIPE ZONE: Strictly locked down
     @DeleteMapping("/clear")
     public ResponseEntity<Map<String, Object>> clearLogs(
             @RequestHeader(value = "X-Admin-Key", required = false) String adminKey) {
         
-        // HACKER CHECK
-        if (!ADMIN_KEY.equals(adminKey)) {
-            return ResponseEntity.status(401).body(Map.of("success", false, "message", "UNAUTHORIZED HACKER"));
+        // IRONCLAD HACKER CHECK
+        if (adminKey == null || !ADMIN_KEY.equals(adminKey)) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "UNAUTHORIZED ACCESS: Cannot delete logs without Admin Key"));
         }
 
         logs.clear();
