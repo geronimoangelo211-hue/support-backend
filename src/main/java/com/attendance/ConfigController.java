@@ -11,12 +11,16 @@ import java.util.Map;
 public class ConfigController {
 
     public static boolean isSystemLocked = false;
-    private final String ADMIN_KEY = "SupportAdmin@2026"; // The exact key from your JS
+    public static long timeOffset = 0; // NEW: Global Time Travel Offset
+    public static String dayOverride = ""; // NEW: Global Day Override
+    private final String ADMIN_KEY = "SupportAdmin@2026";
 
     @GetMapping("/status")
-    public ResponseEntity<Map<String, Boolean>> getSystemStatus() {
-        Map<String, Boolean> response = new HashMap<>();
+    public ResponseEntity<Map<String, Object>> getSystemStatus() {
+        Map<String, Object> response = new HashMap<>();
         response.put("isLocked", isSystemLocked);
+        response.put("timeOffset", timeOffset);
+        response.put("dayOverride", dayOverride == null ? "" : dayOverride);
         return ResponseEntity.ok(response);
     }
 
@@ -25,9 +29,8 @@ public class ConfigController {
             @RequestHeader(value = "X-Admin-Key", required = false) String adminKey, 
             @RequestBody Map<String, Boolean> request) {
         
-        // IRONCLAD HACKER CHECK: Rejects if the key is missing or wrong
         if (adminKey == null || !ADMIN_KEY.equals(adminKey)) {
-            return ResponseEntity.status(401).body(Map.of("success", false, "message", "UNAUTHORIZED ACCESS: Missing or Invalid Admin Key"));
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "UNAUTHORIZED HACKER"));
         }
 
         if (request.containsKey("isLocked")) {
@@ -38,5 +41,25 @@ public class ConfigController {
         response.put("success", true);
         response.put("isLocked", isSystemLocked);
         return ResponseEntity.ok(response);
+    }
+
+    // NEW: Endpoint to set Global Time Travel
+    @PostMapping("/time-travel")
+    public ResponseEntity<Map<String, Object>> setTimeTravel(
+            @RequestHeader(value = "X-Admin-Key", required = false) String adminKey, 
+            @RequestBody Map<String, Object> request) {
+        
+        if (adminKey == null || !ADMIN_KEY.equals(adminKey)) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "UNAUTHORIZED HACKER"));
+        }
+
+        if (request.containsKey("timeOffset")) {
+            timeOffset = ((Number) request.get("timeOffset")).longValue();
+        }
+        if (request.containsKey("dayOverride")) {
+            dayOverride = (String) request.get("dayOverride");
+        }
+        
+        return ResponseEntity.ok(Map.of("success", true));
     }
 }
