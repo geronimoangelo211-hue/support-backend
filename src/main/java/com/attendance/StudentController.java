@@ -16,15 +16,16 @@ public class StudentController {
     private final List<Student> students = new ArrayList<>();
     private final String ADMIN_KEY = "SupportAdmin@2026";
 
-    // Open to everyone (so Dashboards can read the list)
     @GetMapping
     public List<Student> getAllStudents() {
         return students;
     }
 
-    // Open to everyone (so students can Self-Register)
     @PostMapping
     public ResponseEntity<Map<String, Object>> addStudent(@RequestBody Student student) {
+        // Clear the tombstone automatically when a new student is added
+        students.removeIf(s -> "SYS_WIPE_ALL".equals(s.getId()));
+
         students.add(student);
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
@@ -32,15 +33,13 @@ public class StudentController {
         return ResponseEntity.ok(response);
     }
 
-    // DANGEROUS OVERWRITE ZONE: Strictly locked down
     @PostMapping("/sync")
     public ResponseEntity<Map<String, Object>> syncStudents(
             @RequestHeader(value = "X-Admin-Key", required = false) String adminKey, 
             @RequestBody List<Student> newStudents) {
         
-        // IRONCLAD HACKER CHECK
         if (adminKey == null || !ADMIN_KEY.equals(adminKey)) {
-            return ResponseEntity.status(401).body(Map.of("success", false, "message", "UNAUTHORIZED ACCESS: Cannot sync students without Admin Key"));
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "UNAUTHORIZED"));
         }
 
         students.clear();
@@ -50,5 +49,26 @@ public class StudentController {
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         return ResponseEntity.ok(response);
+    }
+
+    // NEW: Guaranteed Server-Side Factory Reset
+    @DeleteMapping("/factory-reset")
+    public ResponseEntity<Map<String, Object>> factoryReset(
+            @RequestHeader(value = "X-Admin-Key", required = false) String adminKey) {
+        
+        if (adminKey == null || !ADMIN_KEY.equals(adminKey)) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "UNAUTHORIZED"));
+        }
+        
+        // 1. Physically destroy all student data
+        students.clear();
+        
+        // 2. Create the Tombstone directly in Java so it never fails JSON parsing
+        Student tombstone = new Student();
+        tombstone.setId("SYS_WIPE_ALL");
+        tombstone.setName("WIPED");
+        students.add(tombstone);
+        
+        return ResponseEntity.ok(Map.of("success", true));
     }
 }
