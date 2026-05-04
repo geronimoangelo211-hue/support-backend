@@ -1,37 +1,21 @@
 package com.attendance;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*") 
+@CrossOrigin(origins = "*")
 public class AccountController {
 
     @Autowired
     private AccountRepository accountRepository;
-
-    private final List<AdminAccount> accounts = new ArrayList<>();
-    private final String ADMIN_KEY = "SupportAdmin@2026";
-
-    public AccountController() {
-        // ISSUE 3 FIX: Always ensure the master account exists even if server restarts
-        accounts.add(new AdminAccount("MainHeadAcc", "SupportHead@2026")); 
-    }
-
-    @GetMapping("/accounts")
-    public List<String> getAccountUsernames() {
-        List<String> usernames = new ArrayList<>();
-        for (AdminAccount acc : accounts) {
-            usernames.add(acc.getUsername());
-        }
-        return usernames;
-    }
 
     @PostMapping("/login")
     public ResponseEntity<?> loginAdmin(@RequestBody LoginRequest loginRequest) {
@@ -41,9 +25,7 @@ public class AccountController {
         if (account != null && account.getPassword().equals(loginRequest.getPassword())) {
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
-            
             response.put("role", account.getRole()); 
-            
             return ResponseEntity.ok(response);
         }
         
@@ -54,38 +36,75 @@ public class AccountController {
     }
 
     @PostMapping("/add-account")
-    public ResponseEntity<Map<String, Object>> addAccount(
-            @RequestHeader(value = "X-Admin-Key", required = false) String adminKey,
-            @RequestBody AdminAccount newAccount) {
-        
-        if (adminKey == null || !ADMIN_KEY.equals(adminKey)) {
-            return ResponseEntity.status(401).body(Map.of("success", false, "message", "UNAUTHORIZED"));
+    public ResponseEntity<?> addAccount(@RequestBody Map<String, String> payload, @RequestHeader(value="X-Admin-Key", required=false) String adminKey) {
+        if (!"SupportAdmin@2026".equals(adminKey)) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Unauthorized.");
+            return ResponseEntity.status(403).body(err);
         }
 
-        for (AdminAccount acc : accounts) {
-            if (acc.getUsername().equals(newAccount.getUsername())) {
-                 return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Username already exists"));
-            }
+        String username = payload.get("username");
+        String password = payload.get("password");
+        String role = payload.get("role");
+
+        if (username == null || password == null) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Missing fields.");
+            return ResponseEntity.badRequest().body(err);
         }
-        
-        accounts.add(newAccount);
-        return ResponseEntity.ok(Map.of("success", true));
+
+        if (accountRepository.existsById(username)) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Username already exists.");
+            return ResponseEntity.badRequest().body(err);
+        }
+
+        if (role == null || role.isEmpty()) {
+            role = "ADMIN";
+        }
+
+        // Fixed the constructor error by passing all three parameters
+        AdminAccount newAccount = new AdminAccount(username, password, role);
+        accountRepository.save(newAccount);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Account created successfully.");
+        return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/delete-account/{username}")
-    public ResponseEntity<Map<String, Object>> deleteAccount(
-            @RequestHeader(value = "X-Admin-Key", required = false) String adminKey,
-            @PathVariable String username) {
+    @GetMapping("/accounts")
+    public ResponseEntity<List<String>> getAccounts() {
+        List<String> usernames = accountRepository.findAll().stream()
+                .map(AdminAccount::getUsername)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(usernames);
+    }
+
+    @DeleteMapping("/delete-account/{user}")
+    public ResponseEntity<?> deleteAccount(@PathVariable String user, @RequestHeader(value="X-Admin-Key", required=false) String adminKey) {
+        if (!"SupportAdmin@2026".equals(adminKey)) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Unauthorized.");
+            return ResponseEntity.status(403).body(err);
+        }
+
+        if ("MainHeadAcc".equals(user)) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Cannot delete default admin.");
+            return ResponseEntity.badRequest().body(err);
+        }
+
+        accountRepository.deleteById(user);
         
-        if (adminKey == null || !ADMIN_KEY.equals(adminKey)) {
-            return ResponseEntity.status(401).body(Map.of("success", false, "message", "UNAUTHORIZED"));
-        }
-
-        if ("MainHeadAcc".equals(username)) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Cannot delete default admin"));
-        }
-
-        accounts.removeIf(acc -> acc.getUsername().equals(username));
-        return ResponseEntity.ok(Map.of("success", true));
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Account deleted.");
+        return ResponseEntity.ok(response);
     }
 }
