@@ -22,10 +22,23 @@
     </properties>
 
     <dependencies>
-        <!-- This is the core dependency that fixes your missing org.springframework errors -->
+        <!-- Web dependency for your REST controllers -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- NEW: Provides JPA, Hibernate, and the Repository interfaces to fix @Entity and JpaRepository errors -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- NEW: Provides an in-memory database so the app can actually run -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
         </dependency>
     </dependencies>
 
