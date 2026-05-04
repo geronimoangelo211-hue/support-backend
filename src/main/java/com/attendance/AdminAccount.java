@@ -1,11 +1,14 @@
 package com.attendance;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+
+@Entity
 public class AdminAccount {
     
+    @Id
     private String username;
     private String password;
-    
-    // NEW: The role variable to handle ADMIN vs VISITOR
     private String role; 
 
     // Constructors
