@@ -31,16 +31,23 @@ public class AccountController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> credentials) {
-        String username = credentials.get("username");
-        String password = credentials.get("password");
-
-        for (AdminAccount acc : accounts) {
-            if (acc.getUsername().equals(username) && acc.getPassword().equals(password)) {
-                return ResponseEntity.ok(Map.of("success", true));
-            }
+    public ResponseEntity<?> loginAdmin(@RequestBody LoginRequest loginRequest) {
+        
+        AdminAccount account = accountRepository.findByUsername(loginRequest.getUsername());
+        
+        if (account != null && account.getPassword().equals(loginRequest.getPassword())) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            
+            response.put("role", account.getRole()); 
+            
+            return ResponseEntity.ok(response);
         }
-        return ResponseEntity.status(401).body(Map.of("success", false, "message", "Invalid credentials"));
+        
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("success", false);
+        errorResponse.put("message", "Invalid credentials.");
+        return ResponseEntity.badRequest().body(errorResponse);
     }
 
     @PostMapping("/add-account")
