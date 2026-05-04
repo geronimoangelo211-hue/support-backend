@@ -13,6 +13,9 @@ import java.util.Map;
 @CrossOrigin(origins = "*") 
 public class AccountController {
 
+    @Autowired
+    private AccountRepository accountRepository;
+
     private final List<AdminAccount> accounts = new ArrayList<>();
     private final String ADMIN_KEY = "SupportAdmin@2026";
 
