@@ -1,3 +1,5 @@
+package com.attendance;
+
 public class AdminAccount {
     
     private String username;
