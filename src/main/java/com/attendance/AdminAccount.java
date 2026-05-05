@@ -10,17 +10,17 @@ public class AdminAccount {
     private String username;
     private String password;
     private String role; 
+    private Long lastOnline; 
 
-    // Constructors
     public AdminAccount() {}
 
     public AdminAccount(String username, String password, String role) {
         this.username = username;
         this.password = password;
         this.role = role;
+        this.lastOnline = System.currentTimeMillis(); 
     }
 
-    // Getters and Setters
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
 
@@ -29,4 +29,7 @@ public class AdminAccount {
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+
+    public Long getLastOnline() { return lastOnline; }
+    public void setLastOnline(Long lastOnline) { this.lastOnline = lastOnline; }
 }
