@@ -23,6 +23,11 @@ public class AccountController {
         AdminAccount account = accountRepository.findByUsername(loginRequest.getUsername());
         
         if (account != null && account.getPassword().equals(loginRequest.getPassword())) {
+            
+            // Mark the user as active right now
+            account.setLastOnline(System.currentTimeMillis());
+            accountRepository.save(account);
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("role", account.getRole()); 
@@ -66,7 +71,6 @@ public class AccountController {
             role = "ADMIN";
         }
 
-        // Fixed the constructor error by passing all three parameters
         AdminAccount newAccount = new AdminAccount(username, password, role);
         accountRepository.save(newAccount);
 
@@ -77,11 +81,18 @@ public class AccountController {
     }
 
     @GetMapping("/accounts")
-    public ResponseEntity<List<String>> getAccounts() {
-        List<String> usernames = accountRepository.findAll().stream()
-                .map(AdminAccount::getUsername)
+    public ResponseEntity<List<Map<String, Object>>> getAccounts() {
+        // Return full account objects so the dashboard can see the 'lastOnline' stamp
+        List<Map<String, Object>> accounts = accountRepository.findAll().stream()
+                .map(acc -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("username", acc.getUsername());
+                    map.put("role", acc.getRole() != null ? acc.getRole() : "ADMIN");
+                    map.put("lastOnline", acc.getLastOnline());
+                    return map;
+                })
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(usernames);
+        return ResponseEntity.ok(accounts);
     }
 
     @DeleteMapping("/delete-account/{user}")
