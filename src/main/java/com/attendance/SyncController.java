@@ -15,17 +15,20 @@ public class SyncController {
     @Autowired
     private CloudDataRepository cloudRepo;
 
-    // This receives the data from your Javascript and saves it to the hard drive
     @PostMapping("/push")
     public ResponseEntity<?> pushData(@RequestBody Map<String, String> payload) {
         String studentsJson = payload.get("students");
         String logsJson = payload.get("logs");
+        String configJson = payload.get("config"); // NEW: Catch System Controls
 
         if (studentsJson != null && !studentsJson.isEmpty()) {
             cloudRepo.save(new CloudData("STUDENTS", studentsJson));
         }
         if (logsJson != null && !logsJson.isEmpty()) {
             cloudRepo.save(new CloudData("LOGS", logsJson));
+        }
+        if (configJson != null && !configJson.isEmpty()) {
+            cloudRepo.save(new CloudData("CONFIG", configJson));
         }
 
         Map<String, Object> res = new HashMap<>();
@@ -39,9 +42,11 @@ public class SyncController {
         
         CloudData studentsData = cloudRepo.findById("STUDENTS").orElse(null);
         CloudData logsData = cloudRepo.findById("LOGS").orElse(null);
+        CloudData configData = cloudRepo.findById("CONFIG").orElse(null);
 
         response.put("students", studentsData != null ? studentsData.getJsonData() : "[]");
         response.put("logs", logsData != null ? logsData.getJsonData() : "[]");
+        response.put("config", configData != null ? configData.getJsonData() : "{}");
 
         return ResponseEntity.ok(response);
     }
