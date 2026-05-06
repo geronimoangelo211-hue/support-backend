@@ -47,6 +47,18 @@ public class AccountController {
         return ResponseEntity.badRequest().body(errorResponse);
     }
 
+    // NEW: Heartbeat endpoint to keep the "Last Online" stamp fresh while active
+    @PostMapping("/heartbeat/{username}")
+    public ResponseEntity<?> heartbeat(@PathVariable String username) {
+        AdminAccount account = accountRepository.findByUsername(username);
+        if (account != null) {
+            account.setLastOnline(System.currentTimeMillis());
+            accountRepository.save(account);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.badRequest().build();
+    }
+
     @PostMapping("/add-account")
     public ResponseEntity<?> addAccount(@RequestBody Map<String, String> payload, @RequestHeader(value="X-Admin-Key", required=false) String adminKey) {
         if (!"SupportAdmin@2026".equals(adminKey)) {
