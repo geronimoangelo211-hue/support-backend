@@ -13,7 +13,7 @@ public class ConfigController {
     public static boolean isSystemLocked = false;
     public static long timeOffset = 0; // NEW: Global Time Travel Offset
     public static String dayOverride = ""; // NEW: Global Day Override
-    private final String ADMIN_KEY = "SupportAdmin@2026";
+    private final String ADMIN_KEY = "HeadOnlineSupport@333";
 
     @GetMapping("/status")
     public ResponseEntity<Map<String, Object>> getSystemStatus() {
