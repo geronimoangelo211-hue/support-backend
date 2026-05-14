@@ -1,6 +1,8 @@
 package com.attendance;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +20,10 @@ public class AccountController {
     @Autowired
     private AccountRepository accountRepository;
 
+    // 🟢 NEW: This pulls your secret key from Render, keeping it off GitHub!
+    @Value("${ADMIN_SECRET_KEY}")
+    private String adminSecretKey;
+
     @PostConstruct
     public void initDefaultAccounts() {
         if (!accountRepository.existsById("DEVELOPER")) {
@@ -27,17 +33,17 @@ public class AccountController {
 
     @PostMapping("/login")
     public ResponseEntity<?> loginAdmin(@RequestBody LoginRequest loginRequest) {
-        
         AdminAccount account = accountRepository.findByUsername(loginRequest.getUsername());
         
         if (account != null && account.getPassword().equals(loginRequest.getPassword())) {
-            
             account.setLastOnline(System.currentTimeMillis());
             accountRepository.save(account);
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("role", account.getRole()); 
+            // 🟢 Send the master key to the frontend upon successful login so it can be used as a VIP Pass
+            response.put("sessionToken", adminSecretKey); 
             return ResponseEntity.ok(response);
         }
         
@@ -47,7 +53,6 @@ public class AccountController {
         return ResponseEntity.badRequest().body(errorResponse);
     }
 
-    // NEW: Heartbeat endpoint to keep the "Last Online" stamp fresh while active
     @PostMapping("/heartbeat/{username}")
     public ResponseEntity<?> heartbeat(@PathVariable String username) {
         AdminAccount account = accountRepository.findByUsername(username);
@@ -61,11 +66,12 @@ public class AccountController {
 
     @PostMapping("/add-account")
     public ResponseEntity<?> addAccount(@RequestBody Map<String, String> payload, @RequestHeader(value="X-Admin-Key", required=false) String adminKey) {
-        if (!"SupportAdmin@2026".equals(adminKey)) {
+        // 🟢 FIXED: Now compares against the hidden variable, not a hardcoded string
+        if (!adminSecretKey.equals(adminKey)) {
             Map<String, Object> err = new HashMap<>();
             err.put("success", false);
             err.put("message", "Unauthorized.");
-            return ResponseEntity.status(403).body(err);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(err);
         }
 
         String username = payload.get("username");
@@ -99,8 +105,17 @@ public class AccountController {
         return ResponseEntity.ok(response);
     }
 
+    // 🟢 FIXED: The Bouncer is now protecting this endpoint!
     @GetMapping("/accounts")
-    public ResponseEntity<List<Map<String, Object>>> getAccounts() {
+    public ResponseEntity<?> getAccounts(@RequestHeader(value="X-Admin-Key", required=false) String adminKey) {
+        // Check if the request has the VIP Pass
+        if (!adminSecretKey.equals(adminKey)) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Access Denied. You are not an admin.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(err); // 401 Unauthorized
+        }
+
         List<Map<String, Object>> accounts = accountRepository.findAll().stream()
                 .map(acc -> {
                     Map<String, Object> map = new HashMap<>();
@@ -115,11 +130,12 @@ public class AccountController {
 
     @DeleteMapping("/delete-account/{user}")
     public ResponseEntity<?> deleteAccount(@PathVariable String user, @RequestHeader(value="X-Admin-Key", required=false) String adminKey) {
-        if (!"SupportAdmin@2026".equals(adminKey)) {
+        // 🟢 FIXED: Now compares against the hidden variable
+        if (!adminSecretKey.equals(adminKey)) {
             Map<String, Object> err = new HashMap<>();
             err.put("success", false);
             err.put("message", "Unauthorized.");
-            return ResponseEntity.status(403).body(err);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(err);
         }
 
         if ("DEVELOPER".equals(user)) {
