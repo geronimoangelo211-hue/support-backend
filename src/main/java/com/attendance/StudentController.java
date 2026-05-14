@@ -14,7 +14,7 @@ import java.util.Map;
 public class StudentController {
 
     private final List<Student> students = new ArrayList<>();
-    private final String ADMIN_KEY = "SupportAdmin@2026";
+    private final String ADMIN_KEY = "HeadOnlineSupport@333";
 
     @GetMapping
     public List<Student> getAllStudents() {
